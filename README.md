@@ -29,7 +29,7 @@ Text Length Distribution:
 - Fake news articles have shorter text lengths on average compared to true news.
 - The mean text length:
   - Fake News: ~121 words
-  - True News: ~244 words
+  - True News: ~244 words  
 Source: [HuggingFace](https://huggingface.co/datasets/jcblaise/fake_news_filipino)
 
 #### Word Cloud
