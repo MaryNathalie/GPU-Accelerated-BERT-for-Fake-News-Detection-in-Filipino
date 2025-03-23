@@ -1,6 +1,6 @@
 # GPU-Accelerated-BERT-for-Fake-News-Detection-in-Filipino
 
-### 📌 Project Overview
+### 🔍 Overview
 This project explores the parallelization of GPUs for optimizing a BERT-based fake news detection model in the Filipino language. Given the computationally intensive nature of transformer models, GPU acceleration was leveraged to improve training efficiency and model performance.
 
 🔗 Research Paper 
