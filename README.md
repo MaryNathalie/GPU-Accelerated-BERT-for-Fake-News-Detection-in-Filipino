@@ -4,7 +4,7 @@
 This project explores the parallelization of GPUs for optimizing a BERT-based fake news detection model in the Filipino language. Given the computationally intensive nature of transformer models, GPU acceleration was leveraged to improve training efficiency and model performance.
 
 ### 🚀 Key Highlights
-- GPU Utilization: Used NVIDIA L4 GPU on Google Colab to parallelize training.
+- GPU Utilization: Used NVIDIA-L4 with CUDA version 12.2 in Google Colab to parallelize training.
 - Dataset: 1,603 Filipino news articles (fake and true) from Hugging Face.
 - Model: BERT-based transformer fine-tuned for fake news classification.
 - Performance Optimization:
@@ -28,51 +28,80 @@ Text Length Distribution:
 - The mean text length:
   - Fake News: ~121 words
   - True News: ~244 words
+Source: [HuggingFace](https://huggingface.co/datasets/jcblaise/fake_news_filipino)
 
 #### Word Cloud
 Below are the most frequent words in fake and true news articles (excluding stop words):
 
-<p align="center"> <img src="assets/wordcloud_fake.png" width="400"/> <img src="assets/wordcloud_true.png" width="400"/> </p>
-Left: Fake News | Right: True News
+<p align="center"> 
+  <img src="images/word_cloud.png" width=80% height=80%> 
+</p>
 
 #### Text Length Distribution
-<p align="center"> <img src="assets/text_length_distribution.png" width="500"/> </p>
 Fake news articles tend to be shorter than true news articles.
+
+<p align="center"> 
+  <img src="images/distribution_length.png" width=80% height=80%> 
+</p>
 
 ### 📊 Performance Analysis
 #### 📌 Impact of Batch Size
-Increasing batch size reduces training time but affects model accuracy:
 
-<p align="center"> <img src="assets/batch_size_vs_accuracy.png" width="450"/> <img src="assets/batch_size_vs_time.png" width="450"/> </p>
-Larger batch sizes reduce training time but may lower accuracy.
+Batch size refers to the number of samples processed by GPU. Note that tensor core requirements define the optimal batch size. Given that the model was trained on a 16-bit floating point precision in NVIDIA-L4 with CUDA version 12.2, the batch size set was decided to be multiples of 8. 
+
+<p align="center"> 
+  <img src="images/batchsize_accuracy-trainingtime.png" width=60% height=60%> 
+</p>
+
+Larger batch size shortens the training time because it improves gradient estimation, leading to faster convergence. However, this may lead to poorer generalization due to reduced noise in gradient estimation, leading to a lower model accuracy.
 
 #### 📌 Speedup with Multiple Data Loaders
-Using 2 data loaders optimized training efficiency without additional memory overhead:
+In data loading, multiple workers can load a batch of data in parallel. Hence while the model is processing a batch, other workers can load the next batch.
 
-<p align="center"> <img src="assets/dataloader_speedup.png" width="500"/> </p>
-Beyond 2-3 data loaders, no significant speedup was observed.
+<p align="center"> 
+  <img src="images/workers_speedup.png" width=60% height=60%> 
+</p>
+
+More workers speed up the data loading and reduce the time the model waits for the data. This is observed until the number of workers was set to 4. Beyond that, the GPU is already utilized to its maximum capacity and no further speedup can be observed, leading only to an increase in memory usage.
 
 #### 📌 Impact of Epochs
-- Training for 2-3 epochs provided the best accuracy-speed tradeoff.
-- More epochs resulted in overfitting, while fewer led to underfitting.
+An epoch entails a complete pass through the training dataset. With every epoch, the model parameters are updated based on the data where fewer epochs increase the risk of underfitting while more epochs increase the risk of overfitting. Hence, finding the number of epochs that balances model accuracy and training time is necessary.
 
-<p align="center"> <img src="assets/epochs_vs_accuracy.png" width="500"/> </p>
-Accuracy improves up to 3 epochs, then plateaus.
+<p align="center"> 
+  <img src="images/epochs_accuracy-trainingtime.png" width=60% height=60%> 
+</p>
 
-## 🛠 Implementation Details
-- Training Framework: PyTorch with Hugging Face’s Transformers library.
-- Parallelization Techniques:
-  - Used CUDA for GPU acceleration.
-  - Tuned batch size and data loader workers for speedup.
-  - Adjusted learning rate and epochs for convergence efficiency.
+Model accuracy increases until 3 and 4 epochs, where the model has reached a bottleneck. On the other hand, training time increases linearly with the number of epochs. From this figure, 3 training epochs are optimal.
 
-## 📜 Future Work
+#### 📌 Impact of Learning Rate
+
+The learning rate controls the step size of the model optimization. It affects the precision of convergence where lower learning rates lead to slower convergence, longer training time, and a higher risk of getting stuck in the local minima, meanwhile, higher learning rates lead to faster convergence, shorter training time, and a higher risk of overshooting the local minima. Typically, higher learning rates require fewer training epochs.
+
+<p align="center"> 
+  <img src="images/learningrate-epochs_accuracy-trainingtime.png" width=60% height=60%> 
+</p>
+
+We chose an optimal learning rate with the right number of epochs considering model accuracy and training time. Note that for this study, the training time of varying learning rates is close and averages to the training time that linearly increases with the number of epochs. Based on this figure, the optimal learning rate is 0.00006 with 2 training epochs.
+
+#### 📌 Optimal Performance Metrics
+
+The optimal BERT-based fake news detection model that ran on an NVIDIA-L4 GPU with the Filipino dataset has a batch size of 32 with 2 data loaders, and a learning rate of 0.00006 with 2 training epochs.
+
+<div align="center">
+  
+| Metric            | Score          | 
+|-------------------|----------------|
+| Training Time (s) | 76.26          | 
+| Accuracy          | 0.9439         |
+| F1 Score          | 0.9440         | 
+| Precision         | 0.9417         | 
+| Recall            | 0.9463         | 
+| Validation Loss   | 0.1645         | 
+
+</div>
+
+### 📜 Future Work
 - Implement gradient accumulation & checkpointing for memory efficiency.
 - Explore distributed training across multiple GPUs.
-- Optimize inference speed for real-time deployment.
-
-## 📎 References
-1. Dataset: Hugging Face - Fake News Filipino
-2. NVIDIA L4 GPU: NVIDIA Docs
-3. Training Optimization: Hugging Face Performance Guide
-
+- Optimizer/Fine-tuner choice to enhance model performance
+- Real-time deployment. 
