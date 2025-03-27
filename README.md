@@ -3,7 +3,7 @@
 ### 🔍 Overview
 This project explores the parallelization of GPUs for optimizing a BERT-based fake news detection model in the Filipino language. Given the computationally intensive nature of transformer models, GPU acceleration was leveraged to improve training efficiency and model performance.
 
-🔗 Research Paper 
+🔗 [Research Paper ](https://github.com/MaryNathalie/GPU-Accelerated-BERT-for-Fake-News-Detection-in-Filipino/blob/main/documents/written_report.pdf)
 
 ### 🚀 Key Highlights
 - GPU Utilization: Used NVIDIA-L4 with CUDA version 12.2 in Google Colab to parallelize training.
